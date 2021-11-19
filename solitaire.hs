@@ -1,18 +1,10 @@
-{--
-An implementation of solitaire in Haskell for COM2108 Functional Programming , a 2nd year module.
-Author: Jorge Taylor
-Created: 02/11/2021
-Last modified: 14/11/2021
---}
-
+-- An implementation of solitaire in Haskell for COM2108 Functional Programming , a 2nd year module.
 import Data.List
 import System.Random
 
 -- Initial datatypes
-data Suit = Hearts | Clubs | Spades | Diamonds
-  deriving (Eq, Ord, Enum, Show)
-data Pip = Ace | Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King
-  deriving (Eq, Ord, Enum, Show)
+data Suit = Hearts | Clubs | Spades | Diamonds deriving (Eq, Ord, Enum, Show)
+data Pip = Ace | Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King deriving (Eq, Ord, Enum, Show)
 type Card = (Suit, Pip)
 type Deck = [Card]
 
@@ -20,15 +12,13 @@ type Deck = [Card]
 type Foundations = [Deck]
 type Columns = [Deck]
 type Reserves = [Card]
-data Board = Empty | EOBoard (Foundations, Columns, Reserves)
-  deriving (Eq, Ord)
---type EOBoard = (Foundations, Columns, Reserves)
+data Board = Empty | EOBoard (Foundations, Columns, Reserves) deriving (Eq, Ord)
 
 instance Show Board where
-  show (EOBoard (f, c, r)) = "EOBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ (showColumns c) ++ "Reserves    " ++ show r
+  show (EOBoard (f, c, r)) = "EOBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Reserves    " ++ show r
     where
       showColumns [] = ""
-      showColumns (c:cs) = show c ++ "\n" ++ showColumns cs 
+      showColumns (c : cs) = show c ++ "\n" ++ showColumns cs
 
 -- List all 52 cards in a pack
 pack :: Deck
@@ -54,7 +44,9 @@ isKing (_, pip) = pip == King
 
 -- Takes a deck and returns a shuffled deck of the same cards
 shuffle :: Int -> Deck
+
 cmp (x1, y1) (x2, y2) = compare y1 y2
+
 shuffle seed = [x | (x, n) <- sortBy cmp (zip pack (randoms (mkStdGen seed) :: [Int]))]
 
 -- Removes the first instance of a card from a given list of cards (deck)
@@ -92,14 +84,10 @@ anyValidMoves board = (not . null) (getValidAces board ++ getValidSuccessors boa
 
 -- Moves all valid cards to foundations (copying them over to foundations and deleting them from their original location)
 autoplay :: Board -> Board
-autoplay (EOBoard (foundations, columns, reserves)) = EOBoard (updated_foundations, updated_columns, updated_reserves)
+autoplay (EOBoard (foundations, columns, reserves)) = foldr moveValidToFoundations (EOBoard (foundations, columns, reserves)) (moveable_aces ++ moveable_successors)
   where
     moveable_aces = getValidAces (EOBoard (foundations, columns, reserves))
     moveable_successors = getValidSuccessors (EOBoard (foundations, columns, reserves))
-
-    EOBoard (updated_foundations, updated_columns, updated_reserves) = foldr moveValidToFoundations (EOBoard (foundations, columns, reserves)) (moveable_aces ++ moveable_successors)
-    --updated_columns = filter (not . null) (map (\e -> if isAce (last e) || any (elem (last e)) [moveable_successors] then init e else e) columns)
-    --updated_reserves = filter (\e -> not (isAce e || e `elem` moveable_successors)) reserves
 
 -- Get a list of all aces which are in the topmost columns or reserves which can be moved to foundations
 getValidAces :: Board -> Deck
