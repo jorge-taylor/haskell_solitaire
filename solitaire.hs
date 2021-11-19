@@ -1,6 +1,6 @@
--- An implementation of solitaire in Haskell for COM2108 Functional Programming , a 2nd year module.
-import Data.List
+-- An implementation of solitaire in Haskell for COM2108 Functional Programming, a 2nd year module.
 import System.Random
+import Data.List
 
 -- Initial datatypes
 data Suit = Hearts | Clubs | Spades | Diamonds deriving (Eq, Ord, Enum, Show)
@@ -14,6 +14,7 @@ type Columns = [Deck]
 type Reserves = [Card]
 data Board = Empty | EOBoard (Foundations, Columns, Reserves) deriving (Eq, Ord)
 
+-- Creates an instance of Board with a specific way of showing boards so it is more legible in the terminal
 instance Show Board where
   show (EOBoard (f, c, r)) = "EOBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Reserves    " ++ show r
     where
@@ -44,9 +45,7 @@ isKing (_, pip) = pip == King
 
 -- Takes a deck and returns a shuffled deck of the same cards
 shuffle :: Int -> Deck
-
 cmp (x1, y1) (x2, y2) = compare y1 y2
-
 shuffle seed = [x | (x, n) <- sortBy cmp (zip pack (randoms (mkStdGen seed) :: [Int]))]
 
 -- Removes the first instance of a card from a given list of cards (deck)
