@@ -12,15 +12,20 @@ type Deck = [Card]
 type Foundations = [Deck]
 type Columns = [Deck]
 type Reserves = [Card]
-data Board = Empty | EOBoard (Foundations, Columns, Reserves) deriving (Eq, Ord)
+data Board = Empty | SBoard (Foundations, Columns, Stock) | EOBoard (Foundations, Columns, Reserves) deriving (Eq, Ord)
+
+-- Datatypes for Spider Board
+type Stock = [Card]
 
 -- Creates an instance of Board with a specific way of showing boards so it is more legible in the terminal
 instance Show Board where
   show (EOBoard (f, c, r)) = "EOBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Reserves    " ++ show r
+  show (SBoard (f, c, s)) = "SBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Stock  " ++ show s ++ " Deals remaining"
     where
       showColumns [] = ""
       showColumns (c : cs) = show c ++ "\n" ++ showColumns cs
-
+      showStock [] = ""
+      showStock (s : ss) = "<unknown> " ++ showStock ss
 -- List all 52 cards in a pack
 pack :: Deck
 pack = [(suit, pip) | suit <- [Hearts .. Diamonds], pip <- [Ace .. King]]
@@ -61,15 +66,31 @@ eoDeal seed = EOBoard (foundations, columns, reserves)
   where
     deck = shuffle seed
     foundations = []
-    columns = splitColumns (drop 4 deck)
+    columns = eoSplitColumns (drop 4 deck)
     reserves = take 4 deck
 
+sDeal :: Int -> Board
+sDeal seed = SBoard (foundations, columns, stock)
+  where
+    deck = shuffle seed ++ shuffle seed
+    foundations = []
+    columns = sSplitColumns (drop 50 deck) -- 54 remaining
+    stock = take 50 deck
+
 -- Splits a deck recursively into piles of 6, to create 8 columns
-splitColumns :: Deck -> [Deck]
-splitColumns [] = []
-splitColumns deck = head : splitColumns tail
+eoSplitColumns :: Deck -> [Deck]
+eoSplitColumns [] = []
+eoSplitColumns deck = head : eoSplitColumns tail
   where
     (head, tail) = splitAt 6 deck
+
+sSplitColumns :: Deck -> [Deck]
+sSplitColumns [] = []
+sSplitColumns deck = head : sSplitColumns tail
+  where
+    if length tail > 30
+      then (head, tail) = splitAt 6 deck
+      else (head, tail) = splitAt 5 deck
 
 -- Calls recursively autoplay while there is a valid move to foundations
 toFoundations :: Board -> Board
