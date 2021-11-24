@@ -12,20 +12,23 @@ type Deck = [Card]
 type Foundations = [Deck]
 type Columns = [Deck]
 type Reserves = [Card]
-data Board = Empty | SBoard (Foundations, Columns, Stock) | EOBoard (Foundations, Columns, Reserves) deriving (Eq, Ord)
+data Board = Empty | EOBoard (Foundations, Columns, Reserves) | SBoard (Foundations, Columns, Stock) deriving (Eq, Ord)
 
 -- Datatypes for Spider Board
 type Stock = [Card]
 
 -- Creates an instance of Board with a specific way of showing boards so it is more legible in the terminal
+-- CHANGE TO LET TO MAKE MORE EFFICIENT?
 instance Show Board where
   show (EOBoard (f, c, r)) = "EOBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Reserves    " ++ show r
-  show (SBoard (f, c, s)) = "SBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Stock  " ++ show s ++ " Deals remaining"
     where
       showColumns [] = ""
       showColumns (c : cs) = show c ++ "\n" ++ showColumns cs
-      showStock [] = ""
-      showStock (s : ss) = "<unknown> " ++ showStock ss
+  show (SBoard (f, c, s)) = "SBoard\nFoundations  " ++ show f ++ "\nColumns\n" ++ showColumns c ++ "Stock  " ++ show (length s) ++ " Deals remaining"
+    where
+      showColumns [] = ""
+      showColumns (c : cs) = show c ++ "\n" ++ showColumns cs
+
 -- List all 52 cards in a pack
 pack :: Deck
 pack = [(suit, pip) | suit <- [Hearts .. Diamonds], pip <- [Ace .. King]]
@@ -88,11 +91,13 @@ sSplitColumns :: Deck -> [Deck]
 sSplitColumns [] = []
 sSplitColumns deck = head : sSplitColumns tail
   where
+    (head, tail) = splitAt 6 deck
+    {--
     if length tail > 30
       then (head, tail) = splitAt 6 deck
       else (head, tail) = splitAt 5 deck
+      --}
 
--- Calls recursively autoplay while there is a valid move to foundations
 toFoundations :: Board -> Board
 toFoundations board
   | anyValidMoves board = toFoundations (autoplay board)
