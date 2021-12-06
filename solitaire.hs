@@ -5,7 +5,7 @@ import Data.List
 -- Initial datatypes
 data Suit = Hearts | Clubs | Spades | Diamonds deriving (Eq, Ord, Enum, Show)
 data Pip = Ace | Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King deriving (Eq, Ord, Enum, Show)
-type Card = (Suit, Pip)
+type Card = (Pip, Suit)
 type Deck = [Card]
 
 -- Datatypes for Eight Off Board
@@ -31,25 +31,25 @@ instance Show Board where
 
 -- List all 52 cards in a pack
 pack :: Deck
-pack = [(suit, pip) | suit <- [Hearts .. Diamonds], pip <- [Ace .. King]]
+pack = [(pip, suit) | pip <- [Ace .. King], suit <- [Hearts .. Diamonds]]
 
 -- Returns the successor of a card (successor of a king is an ace of the same suit)
 sCard :: Card -> Card
-sCard (suit, King) = (suit, Ace)
-sCard (suit, pip) = (suit, succ pip)
+sCard (King, suit) = (Ace, suit)
+sCard (pip, suit) = (succ pip, suit)
 
 -- Returns the successor of a card (predecessor of an ace is a king of the same suit)
 pCard :: Card -> Card
-pCard (suit, Ace) = (suit, King)
-pCard (suit, pip) = (suit, pred pip)
+pCard (Ace, suit) = (King, suit)
+pCard (pip, suit) = (pred pip, suit)
 
 -- Checks if the given card is an ace
 isAce :: Card -> Bool
-isAce (_, pip) = pip == Ace
+isAce (pip, _) = pip == Ace
 
 -- Checks if the given card is a king
 isKing :: Card -> Bool
-isKing (_, pip) = pip == King
+isKing (pip, _) = pip == King
 
 -- Takes a deck and returns a shuffled deck of the same cards
 shuffle :: Int -> Deck
@@ -141,4 +141,14 @@ cardToFoundations card foundations
 
 -- Checks whether two cards are of the same suit
 sameSuit :: Card -> Card -> Bool
-sameSuit (suit1, _) (suit2, _) = suit1 == suit2
+sameSuit (_, suit1) (_, suit2) = suit1 == suit2
+
+--findMoves :: Board -> [Board]
+findMoves (EOBoard (foundations, columns, reserves)) =  potential_moveables
+  where
+    potential_moveables = map last columns ++ reserves
+
+--cardToColumns :: Card -> Columns -> Columns
+cardToColumns card columns = map (\e -> if sameSuit card (last e) then reverse (card : e) else e) columns 
+
+--cardToReserves :: Card -> Reserves -> Reserves
