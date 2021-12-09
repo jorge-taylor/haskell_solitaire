@@ -113,23 +113,6 @@ sSplitColumns deck = head : sSplitColumns tail
       else (head, tail) = splitAt 5 deck
       --}
 
--- Initial function which calls toFoundations
-toFoundations :: Board -> Board
-toFoundations board
-  | anyToFoundationMoves board = toFoundations (moveToFoundations board)
-  | otherwise = board
-
--- Moves all valid cards to foundations (copying them over to foundations and deleting them from their original location)
-moveToFoundations :: Board -> Board
-moveToFoundations (EOBoard (foundations, columns, reserves)) = foldr cardToFoundations (EOBoard (foundations, columns, reserves)) (moveable_aces ++ moveable_successors)
-  where
-    moveable_aces = findTopmostAces (EOBoard (foundations, columns, reserves))
-    moveable_successors = findTopmostSuccessors (EOBoard (foundations, columns, reserves))
-
--- Check that there is a valid move given an eight off board
-anyToFoundationMoves :: Board -> Bool
-anyToFoundationMoves board = (not . null) (findTopmostAces board ++ findTopmostSuccessors board)
-
 -- Get a list of all aces which are in the topmost columns or reserves which can be moved to foundations
 findTopmostAces :: Board -> Deck
 findTopmostAces (EOBoard (_, columns, reserves)) = filter isAce (map last (filter (not . null) columns) ++ reserves)
@@ -148,6 +131,23 @@ findTopmostPredecessors (EOBoard (foundations, columns, reserves)) = [c2 | c1 <-
     topmost_columns = map last (filter (not . null) columns)
     topmost_possibles = map last (filter (not . null) columns) ++ reserves
 
+-- Initial function which calls toFoundations
+toFoundations :: Board -> Board
+toFoundations board
+  | anyToFoundationMoves board = toFoundations (moveToFoundations board)
+  | otherwise = board
+
+-- Moves all valid cards to foundations (copying them over to foundations and deleting them from their original location)
+moveToFoundations :: Board -> Board
+moveToFoundations (EOBoard (foundations, columns, reserves)) = foldr cardToFoundations (EOBoard (foundations, columns, reserves)) (moveable_aces ++ moveable_successors)
+  where
+    moveable_aces = findTopmostAces (EOBoard (foundations, columns, reserves))
+    moveable_successors = findTopmostSuccessors (EOBoard (foundations, columns, reserves))
+
+-- Check that there is a valid move given an eight off board
+anyToFoundationMoves :: Board -> Bool
+anyToFoundationMoves board = (not . null) (findTopmostAces board ++ findTopmostSuccessors board)
+
 -- Moves valid cards to foundations deleting them from their old place
 cardToFoundations :: Card -> Board -> Board
 cardToFoundations card (EOBoard (foundations, columns, reserves)) = EOBoard (new_foundations, new_columns, new_reserves)
@@ -164,13 +164,13 @@ insertCardToFoundations card foundations
 
 -- Find all valid moves not to foundations, creating a list of boards in order of the best moves
 findMoves :: Board -> [Board]
-findMoves board@(EOBoard (foundations, columns, reserves)) = moveToColumnsBoard ++ moveToReservesBoard
+findMoves board@(EOBoard (foundations, columns, reserves)) = moveToColumnsBoards ++ moveToReservesBoards
   where
     topmost_predecessors = findTopmostPredecessors board
     topmost_columns = map last (filter (not.null) columns)
 
-    moveToColumnsBoard = [toFoundations (moveToColumns tp board) | tp <- topmost_predecessors]
-    moveToReservesBoard = [toFoundations (cardToReserves tc board) | tc <- topmost_columns]
+    moveToColumnsBoards = [toFoundations (moveToColumns tp board) | tp <- topmost_predecessors]
+    moveToReservesBoards = [toFoundations (cardToReserves tc board) | tc <- topmost_columns]
 
 -- Helper function for moving a card to a column, it deletes that card from its previous position
 moveToColumns :: Card -> Board -> Board
