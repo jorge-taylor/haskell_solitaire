@@ -1,4 +1,4 @@
--- An implementation of solitaire in Haskell for COM2108 Functional Programming, a 2nd year module.
+-- An implementation of self-playing solitaire in Haskell
 import System.Random
 import Data.List
 import Data.Maybe
